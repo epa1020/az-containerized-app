@@ -1,0 +1,20 @@
+name: example-az-app
+run-name: Building example az app
+on:
+  push:
+    branches:
+      - 'feature/**'
+jobs:
+  check-bats-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '11'
+          cache: 'maven'
+      - name: Build Unit Testing
+        run: mvn test
+      - name: Build with Maven
+        run: mvn clean package --file pom.xml
