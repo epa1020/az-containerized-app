@@ -24,10 +24,11 @@ jobs:
               az deployment group validate \
               --name ${{ env.CUSTOMER }}-dev-rg \
               --resource-group ${{ env.CUSTOMER }}-dev-rg\
-              --template-file ./infra.json \
+              --template-file ./iac/infra.json \
               --parameters customer=${{ env.CUSTOMER }} \
               --parameters environment=${{ env.ENVIRONMENT }}
   dev:
+    needs: build
     runs-on: ubuntu-latest
     environment: infra-prd-env
     steps:
@@ -36,6 +37,6 @@ jobs:
               az deployment group create \
               --name ${{ env.CUSTOMER }}-dev-rg-deploy \
               --resource-group ${{ env.CUSTOMER }}-dev-rg\
-              --template-file ./infra.json \
+              --template-file ./iac/infra.json \
               --parameters customer=${{ env.CUSTOMER }} \
               --parameters environment=${{ env.ENVIRONMENT }}
