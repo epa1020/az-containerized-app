@@ -18,7 +18,9 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run: |
           az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg
-
+      - run: |
+          ls
+          pwd
       - name: "Preview Infra"
         run: |
           az deployment group validate \

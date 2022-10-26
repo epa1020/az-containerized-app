@@ -1,15 +1,13 @@
 name: ci-example-az-app
 run-name: CI example az app
 on:
-  push:
-    branches:
-      - 'feature/**'
+  pull_request:
+    branches: [master]
 env: 
   CUSTOMER: awesome
   BASE_APPNAME: awesome-dev-demo-app
 jobs:
   build:
-    if:  startsWith(github.head_ref, 'feature/')
     runs-on: ubuntu-latest
     outputs:
       imagename: ${{ steps.publish-image-name.outputs.image }}
@@ -43,7 +41,6 @@ jobs:
         run: |
               echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
   dev:
-    if:  startsWith(github.head_ref, 'feature/')
     runs-on: ubuntu-latest
     environment: dev-env
     needs: build
