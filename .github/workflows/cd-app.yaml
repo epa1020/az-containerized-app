@@ -7,6 +7,7 @@ on:
       - '!iac/**'
 env: 
   CUSTOMER: awesome
+  BASE_APPNAME: awesome-dev-demo-app
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,9 +42,9 @@ jobs:
       - id: publish-image-name
         run: |
               echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
-  dev:
+  qa:
     runs-on: ubuntu-latest
-    environment: dev-env
+    environment: qa-env
     needs: build
     steps:
       - name: 'Login via Azure CLI'
@@ -54,15 +55,29 @@ jobs:
               az extension add --name containerapp
       - id: publish-image-name
         run: |
-              echo  "-------IMAGE---------"
+              echo  "--------Image--------"
               echo  ${{ needs.build.outputs.imagename }}
               echo  "-----------------"
-              az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app   \
+              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app \
               -g ${{ env.CUSTOMER }}-dev-rg\
               --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.imagename}}
-      - name: Link ACR to APP
+
+  prd:
+    runs-on: ubuntu-latest
+    environment: prd-env
+    needs: qa
+    steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
+      - id: publish-image-name
         run: |
-          acr_name=${{ env.CUSTOMER }}-dev-demo-acr
-          acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
-          acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
-          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"
+              echo  "-------Image---------"
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app \
+              -g ${{ env.CUSTOMER }}-prd-rg\
+              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.imagename}}

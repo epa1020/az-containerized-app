@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "feature/**"
+    paths:
+      - 'iac/**'
 env:
   CUSTOMER: awesome
   REGION: eastus2
@@ -34,7 +36,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: "Deploy Infra"
         run: |
-          az deployment group create --name ${{ env.CUSTOMER }}-qa-rg-deploy --resource-group ${{ env.CUSTOMER }}-prd-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=qa
+          az deployment group create --name ${{ env.CUSTOMER }}-qa-rg-deploy --resource-group ${{ env.CUSTOMER }}-qa-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=qa
 
   prd:
     needs: qa

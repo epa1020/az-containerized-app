@@ -23,10 +23,55 @@
         "managedEnvironments_rg_tempalte_appenv_name": "[resourceGroup().name]",
         "venv-name": "[concat(variables('base-name'),'-venv')]",
         "container-app-name": "[concat(variables('base-name'),'-app')]",
+        "acr-name": "[concat(variables('base-name'),'-acr')]",
         "container_image": "nginx",
         "subnet-name": "[concat(variables('base-name'),'-subnet')]"
     },
     "resources": [
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "2022-02-01-preview",
+            "name": "[variables('acr-name')]",
+            "location": "eastus2",
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+            },
+            "properties": {
+                "adminUserEnabled": true,
+                "policies": {
+                    "quarantinePolicy": {
+                        "status": "disabled"
+                    },
+                    "trustPolicy": {
+                        "type": "Notary",
+                        "status": "disabled"
+                    },
+                    "retentionPolicy": {
+                        "days": 7,
+                        "status": "disabled"
+                    },
+                    "exportPolicy": {
+                        "status": "enabled"
+                    },
+                    "azureADAuthenticationAsArmPolicy": {
+                        "status": "enabled"
+                    },
+                    "softDeletePolicy": {
+                        "retentionDays": 7,
+                        "status": "disabled"
+                    }
+                },
+                "encryption": {
+                    "status": "disabled"
+                },
+                "dataEndpointEnabled": false,
+                "publicNetworkAccess": "Enabled",
+                "networkRuleBypassOptions": "AzureServices",
+                "zoneRedundancy": "Disabled",
+                "anonymousPullEnabled": false
+            }
+        },
         {
             "type": "Microsoft.OperationalInsights/workspaces",
             "apiVersion": "2021-12-01-preview",
@@ -125,7 +170,14 @@
                 "weight": 100
               }
             ]
-          }
+          },
+          "registries": [
+                {
+                    "server": "awesomeacr.azurecr.io",
+                    "username": "awesomeacr",
+                    "passwordSecretRef": "awesomeacrazurecrio-awesomeacr"
+                }
+            ]
         },
         "template": {
           "revisionSuffix": "myrevision2",

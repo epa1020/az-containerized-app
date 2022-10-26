@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "feature/**"
+    paths:
+      - 'iac/**'
 env:
   CUSTOMER: awesome
   REGION: eastus2
