@@ -1,12 +1,14 @@
-name: cd-example-az-app
-run-name: CD example az app
+name: ci-example-az-app
+run-name: CI example az app
 on:
-  push:
-    branches:
-      - master
+  pull_request:
+    branches: [master]
+    paths:
+      - '!iac/**'
 env: 
-  BASE_RG: awesome-customer
-  BASE_APPNAME: ac-frontend-ca
+  CUSTOMER: awesome
+  BASE_APPNAME: awesome-dev-demo-app
+  ACR_NAME: ${{ env.CUSTOMER }}prddemoacr
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,19 +33,19 @@ jobs:
       - name: 'Push image'
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          login-server: ${{ env.ACR_NAME }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - id: build-image
         run: |
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/example-az-app:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/example-az-app:${{ github.sha }}
+          docker build . -t ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
       - id: publish-image-name
         run: |
               echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
-  dev:
+  qa:
     runs-on: ubuntu-latest
-    environment: dev-env
+    environment: qa-env
     needs: build
     steps:
       - name: 'Login via Azure CLI'
@@ -54,11 +56,29 @@ jobs:
               az extension add --name containerapp
       - id: publish-image-name
         run: |
-              echo  "----------------"
-              echo  ${{ env.BASE_APPNAME }}
+              echo  "--------Image--------"
               echo  ${{ needs.build.outputs.imagename }}
-              echo  ${{ env.BASE_RG }}
               echo  "-----------------"
-              az containerapp update -n ${{ env.BASE_APPNAME }}  \
-              -g ${{ env.BASE_RG }} \
-              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.imagename}}
+              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app \
+              -g ${{ env.CUSTOMER }}-dev-rg\
+              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
+
+  prd:
+    runs-on: ubuntu-latest
+    environment: prd-env
+    needs: qa
+    steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
+      - id: publish-image-name
+        run: |
+              echo  "-------Image---------"
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app \
+              -g ${{ env.CUSTOMER }}-prd-rg\
+              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
