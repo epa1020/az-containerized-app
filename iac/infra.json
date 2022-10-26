@@ -172,11 +172,7 @@
             ]
           },
           "registries": [
-                {
-                    "server": "awesomeacr.azurecr.io",
-                    "username": "awesomeacr",
-                    "passwordSecretRef": "awesomeacrazurecrio-awesomeacr"
-                }
+                
             ]
         },
         "template": {
