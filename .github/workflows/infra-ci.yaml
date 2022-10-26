@@ -22,7 +22,7 @@ jobs:
       - name: 'Preview Infra'
         run: |
               az deployment group validate \
-              --name ${{ env.RG_NAME }}-deploy \
+              --name ${{ env.CUSTOMER }}-dev-rg \
               --resource-group ${{ env.CUSTOMER }}-dev-rg\
               --template-file ./infra.json \
               --parameters customer=${{ env.CUSTOMER }} \
@@ -34,7 +34,7 @@ jobs:
       - name: 'Deploy Infra'
         run: |
               az deployment group create \
-              --name ${{ env.RG_NAME }}-deploy \
+              --name ${{ env.CUSTOMER }}-dev-rg-deploy \
               --resource-group ${{ env.CUSTOMER }}-dev-rg\
               --template-file ./infra.json \
               --parameters customer=${{ env.CUSTOMER }} \
