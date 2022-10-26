@@ -16,7 +16,7 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      run : |
+      - run : |
         az group create -l ${{ env.AZURE_CREDENTIALS }} -n MyResourceGroup ${{ env.RG_NAME }} 
       
       - name: 'Preview Infra'
