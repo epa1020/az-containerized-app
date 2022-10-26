@@ -17,7 +17,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run : |
-            az group create -l ${{ env.AZURE_CREDENTIALS }} -n MyResourceGroup ${{ env.RG_NAME }} 
+            az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg 
       
       - name: 'Preview Infra'
         run: |
