@@ -3,6 +3,8 @@ run-name: CI example az app
 on:
   pull_request:
     branches: [master]
+    paths:
+      - '!iac/**'
 env: 
   CUSTOMER: awesome
   BASE_APPNAME: awesome-dev-demo-app
