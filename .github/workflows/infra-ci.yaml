@@ -17,7 +17,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run : |
-        az group create -l ${{ env.AZURE_CREDENTIALS }} -n MyResourceGroup ${{ env.RG_NAME }} 
+            az group create -l ${{ env.AZURE_CREDENTIALS }} -n MyResourceGroup ${{ env.RG_NAME }} 
       
       - name: 'Preview Infra'
         run: |
@@ -30,6 +30,7 @@ jobs:
   dev:
     runs-on: ubuntu-latest
     environment: infra-prd-env
+    steps:
       - name: 'Deploy Infra'
         run: |
               az deployment group create \
