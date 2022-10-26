@@ -48,7 +48,7 @@ jobs:
           rg=${{ env.CUSTOMER }}-qa-rg 
           acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
           acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
-          az containerapp registry set -n $app_name -g $rg--server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"          
+          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"          
 
   prd:
     needs: qa
@@ -74,4 +74,4 @@ jobs:
           rg=${{ env.CUSTOMER }}-prd-rg 
           acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
           acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
-          az containerapp registry set -n $app_name -g $rg--server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"
+          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"
