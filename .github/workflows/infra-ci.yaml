@@ -41,3 +41,11 @@ jobs:
       - name: "Deploy Infra"
         run: |
           az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
+      - name: Link ACR to APP
+        run: |
+          acr_name=${{ env.CUSTOMER }}devdemoacr
+          app_name=${{ env.CUSTOMER }}-dev-demo-app
+          rg=${{ env.CUSTOMER }}-dev-rg 
+          acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
+          acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
+          az containerapp registry set -n $app_name -g $rg--server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"

@@ -17,13 +17,13 @@
     },
     "functions": [],
     "variables": {
-        "base-name": "[concat(parameters('customer'),parameters('environment'),'demo')]",
+        "base-name": "[concat(parameters('customer'),'-',parameters('environment'),'-demo')]",
         "vnet_name": "[concat(variables('base-name'),'-vnet')]",
         "log-swp-name": "[concat(variables('base-name'),'-logwsp')]",
         "managedEnvironments_rg_tempalte_appenv_name": "[resourceGroup().name]",
         "venv-name": "[concat(variables('base-name'),'-venv')]",
         "container-app-name": "[concat(variables('base-name'),'-app')]",
-        "acr-name": "[concat(variables('base-name'),'-acr')]",
+        "acr-name": "[concat(parameters('customer'),parameters('environment'),'demo','acr')]",
         "container_image": "nginx",
         "subnet-name": "[concat(variables('base-name'),'-subnet')]"
     },
