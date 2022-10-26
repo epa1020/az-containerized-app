@@ -33,4 +33,4 @@ jobs:
     steps:
       - name: "Deploy Infra"
         run: |
-          az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ${{ env.GITHUB_WORKSPACE }}/iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
+          az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
