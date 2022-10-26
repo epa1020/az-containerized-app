@@ -2,7 +2,6 @@ name: ci-example-az-app
 run-name: CI example az app
 on:
   pull_request:
-    branches: [master]
     paths:
       - '!iac/**'
 env: 
