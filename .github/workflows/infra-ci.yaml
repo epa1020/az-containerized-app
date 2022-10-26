@@ -3,17 +3,13 @@ run-name: CI Infra example az app
 on:
   push:
     branches:
-    - master
+      - 'feature/**'
 env: 
   CUSTOMER: awesome
-  ENVIRONMENT: dev
-  RG_NAME: awesome-dev-rg
   REGION: eastus2
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      imagename: ${{ steps.publish-image-name.outputs.image }}
     steps:
       - uses: actions/checkout@v3
       - name: 'Login via Azure CLI'
