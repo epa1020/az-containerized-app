@@ -21,6 +21,8 @@ jobs:
       - run: |
           ls
           pwd
+          ls ./iac
+          cat ./iac/infra.json
       - name: "Preview Infra"
         run: |
           az deployment group validate \
