@@ -1,0 +1,152 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "functions": [],
+    "variables": {
+        "vnet_name":"ac-demo-dev-vnet",
+        "log-swp-name":"ac-demo-dev-logwsp",
+        "managedEnvironments_rg_tempalte_appenv_name": "[resourceGroup().name]",
+        "venv-name": "ac-demo-dev-venv",
+        "container-app-name": "ac-demo-dev-app",
+        "container_image": "nginx",
+        "subnet-name": "app-dev-subn"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "apiVersion": "2021-12-01-preview",
+            "name": "[variables('log-swp-name')]",
+            "location": "westus2",
+            "properties": {
+                "sku": {
+                "name": "pergb2018"
+                },
+                "retentionInDays": 30,
+                "workspaceCapping": {
+                "dailyQuotaGb": 0.023
+                },
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+            }
+        },
+         {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2022-01-01",
+            "name": "[variables('vnet_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Customer": "awesome-customer"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.1.0.0/20"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnet-name')]",
+                        "properties": {
+                            "addressPrefix": "10.1.0.0/20",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false
+            }
+        },
+{
+            "type": "Microsoft.App/managedEnvironments",
+            "apiVersion": "2022-03-01",
+            "name": "[variables('venv-name')]",
+             "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnet_name'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "vnetConfiguration": {
+                    "internal": false,
+                    "infrastructureSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnet_name'), variables('subnet-name'))]",
+                    "dockerBridgeCidr": "10.2.0.1/16",
+                    "platformReservedCidr": "10.0.0.0/16",
+                    "platformReservedDnsIP": "10.0.0.2"
+                },
+                "appLogsConfiguration": {
+                "destination": "log-analytics",
+                "logAnalyticsConfiguration": {
+                    "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('log-swp-name')), '2015-11-01-preview').customerId]",
+                    "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('log-swp-name')), '2015-11-01-preview').primarySharedKey]"
+                }
+                }
+            }
+        },
+            {
+      "apiVersion": "2022-03-01",
+      "type": "Microsoft.App/containerApps",
+      "name": "[variables('container-app-name')]",
+      "location": "[resourceGroup().location]",
+    "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments', variables('venv-name'))]"
+            ],
+      "identity": {
+        "type": "None"
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', variables('venv-name'))]",
+        "configuration": {
+          "secrets": [
+          ],
+          "ingress": {
+            "external": true,
+            "targetPort": 8080,
+            "allowInsecure": false,
+            "traffic": [
+              {
+                "latestRevision": true,
+                "weight": 100
+              }
+            ]
+          }
+        },
+        "template": {
+          "revisionSuffix": "myrevision",
+          "containers": [
+            {
+              "name": "main",
+              "image": "[variables('container_image')]",
+              "env": [
+              ],
+              "resources": {
+                "cpu": 0.5,
+                "memory": "1Gi"
+              },
+              "probes": []
+            }
+          ],
+            "scale": {
+                "minReplicas": 0,
+                "maxReplicas": 5,
+                "rules": [
+                    {
+                        "name": "req-scaling",
+                        "http": {
+                            "metadata": {
+                                "concurrentRequests": "10"
+                            }
+                        }
+                    }
+                ]
+            },
+          "volumes": [
+          ]
+        }
+      }
+    }
+    ],
+    "outputs": {}
+}
