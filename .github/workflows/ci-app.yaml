@@ -2,8 +2,7 @@ name: ci-example-az-app
 run-name: CI example az app
 on:
   pull_request:
-    paths:
-      - '!iac/**'
+    branches: [master]
 env: 
   CUSTOMER: awesome
   ACR_NAME: ${{ env.CUSTOMER }}devdemoacr
