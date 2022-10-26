@@ -54,7 +54,11 @@ jobs:
               az extension add --name containerapp
       - id: publish-image-name
         run: |
-              az containerapp update \
-              --name ${{ env.BASE_APPNAME }}  \
-              --resource-group ${{ env.BASE_RG }} \
-              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.image}}
+              echo  "----------------"
+              echo  ${{ env.BASE_APPNAME }}
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  ${{ env.BASE_RG }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.BASE_APPNAME }}  \
+              -g ${{ env.BASE_RG }} \
+              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.imagename}}
