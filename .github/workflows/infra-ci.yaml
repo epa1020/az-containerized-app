@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: infra-prd-env
     steps:
+      - uses: actions/checkout@v3
       - name: "Deploy Infra"
         run: |
           az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev

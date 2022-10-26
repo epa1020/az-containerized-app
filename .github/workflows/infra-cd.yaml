@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: infra-qa-env
     steps:
+      - uses: actions/checkout@v3
       - name: "Deploy Infra"
         run: |
           az deployment group create --name ${{ env.CUSTOMER }}-qa-rg-deploy --resource-group ${{ env.CUSTOMER }}-prd-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=qa
@@ -36,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: infra-prd-env
     steps:
+      - uses: actions/checkout@v3
       - name: "Deploy Infra"
         run: |
           az deployment group create --name ${{ env.CUSTOMER }}-prd-rg-deploy --resource-group ${{ env.CUSTOMER }}-prd-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=prd
