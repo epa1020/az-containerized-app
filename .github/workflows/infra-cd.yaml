@@ -1,0 +1,54 @@
+name: ci-infra-example-az-app
+run-name: CI Infra example az app
+on:
+  push:
+    branches:
+    - master
+env: 
+  CUSTOMER: awesome
+  REGION: eastus2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      run : |
+        az group create -l ${{ env.AZURE_CREDENTIALS }} -n MyResourceGroup ${{ env.RG_NAME }} 
+      
+      - name: 'Preview Infra'
+        run: |
+              az deployment group validate \
+              --name ${{ env.RG_NAME }}-deploy \
+              --resource-group ${{ env.CUSTOMER }}-dev-rg\
+              --template-file ./infra.json \
+              --parameters customer=${{ env.CUSTOMER }} \
+              --parameters environment=dev
+  qa:
+    runs-on: ubuntu-latest
+    environment: infra-qa-env
+    steps:
+      - name: 'Deploy Infra'
+        run: |
+              az deployment group create \
+              --name ${{ env.RG_NAME }}-deploy \
+              --resource-group ${{ env.CUSTOMER }}-prd-rg\
+              --template-file ./infra.json \
+              --parameters customer=${{ env.CUSTOMER }} \
+              --parameters environment=qa
+
+  prd:
+    runs-on: ubuntu-latest
+    environment: infra-prd-env
+    steps:
+      - name: 'Deploy Infra'
+        run: |
+              az deployment group create \
+              --name ${{ env.RG_NAME }}-deploy \
+              --resource-group ${{ env.CUSTOMER }}-prd-rg\
+              --template-file ./infra.json \
+              --parameters customer=${{ env.CUSTOMER }} \
+              --parameters environment=prd

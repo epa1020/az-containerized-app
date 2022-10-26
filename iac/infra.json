@@ -1,16 +1,30 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {},
+    "parameters": {
+      "customer": {
+        "type": "string",
+        "metadata": {
+          "description": "Customer Name"
+        }
+      },
+      "environment": {
+        "type": "string",
+        "metadata": {
+          "description": "Infrastructure Environment"
+        }
+      }
+    },
     "functions": [],
     "variables": {
-        "vnet_name":"ac-demo-dev-vnet",
-        "log-swp-name":"ac-demo-dev-logwsp",
+        "base-name": "[concat(parameters('customer'),parameters('environment'),'demo')]",
+        "vnet_name": "[concat(variables('base-name'),'-vnet')]",
+        "log-swp-name": "[concat(variables('base-name'),'-logwsp')]",
         "managedEnvironments_rg_tempalte_appenv_name": "[resourceGroup().name]",
-        "venv-name": "ac-demo-dev-venv",
-        "container-app-name": "ac-demo-dev-app",
+        "venv-name": "[concat(variables('base-name'),'-venv')]",
+        "container-app-name": "[concat(variables('base-name'),'-app')]",
         "container_image": "nginx",
-        "subnet-name": "app-dev-subn"
+        "subnet-name": "[concat(variables('base-name'),'-subnet')]"
     },
     "resources": [
         {
@@ -114,7 +128,7 @@
           }
         },
         "template": {
-          "revisionSuffix": "myrevision",
+          "revisionSuffix": "myrevision2",
           "containers": [
             {
               "name": "main",
@@ -122,8 +136,8 @@
               "env": [
               ],
               "resources": {
-                "cpu": 0.5,
-                "memory": "1Gi"
+                "cpu": 1,
+                "memory": "2Gi"
               },
               "probes": []
             }
