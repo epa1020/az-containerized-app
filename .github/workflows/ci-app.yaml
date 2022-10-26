@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, reopened]
 env: 
-  BASE_RG: awesome-customer
-  BASE_APPNAME: ac-frontend-ca
+  CUSTOMER: awesome
+  BASE_APPNAME: awesome-dev-demo-app
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -59,5 +59,5 @@ jobs:
               echo  ${{ env.BASE_RG }}
               echo  "-----------------"
               az containerapp update -n ${{ env.BASE_APPNAME }}  \
-              -g ${{ env.BASE_RG }} \
+              -g ${{ env.CUSTOMER }}-dev-rg\
               --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{needs.build.outputs.imagename}}
