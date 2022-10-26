@@ -44,6 +44,7 @@ jobs:
   dev:
     runs-on: ubuntu-latest
     environment: dev-env
+    needs: build
     steps:
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
