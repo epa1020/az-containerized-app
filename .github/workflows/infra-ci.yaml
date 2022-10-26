@@ -38,6 +38,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
       - name: "Deploy Infra"
         run: |
           az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev

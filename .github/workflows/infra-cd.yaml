@@ -35,6 +35,8 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run: |
+              az extension add --name containerapp
+      - run: |
           az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-qa-rg
       - name: "Deploy Infra"
         run: |
@@ -58,6 +60,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
       - run: |
           az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-prd-rg
       - name: "Deploy Infra"
