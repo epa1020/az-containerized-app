@@ -50,6 +50,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
       - id: publish-image-name
         run: |
               az containerapp update \
