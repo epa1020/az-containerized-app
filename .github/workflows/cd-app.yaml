@@ -7,8 +7,7 @@ on:
       - '!iac/**'
 env: 
   CUSTOMER: awesome
-  BASE_APPNAME: awesome-dev-demo-app
-  ACR_NAME: ${{ env.CUSTOMER }}prddemoacr
+  ACR_NAME: awesomeprddemoacr
 jobs:
   build:
     runs-on: ubuntu-latest

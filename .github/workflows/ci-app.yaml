@@ -5,7 +5,7 @@ on:
     branches: [master]
 env: 
   CUSTOMER: awesome
-  ACR_NAME: ${{ env.CUSTOMER }}devdemoacr
+  ACR_NAME: awesomedevdemoacr
 jobs:
   build:
     runs-on: ubuntu-latest
