@@ -3,7 +3,7 @@ run-name: CI Infra example az app
 on:
   push:
     branches:
-      - 'master'
+      - 'feature/**'
 env: 
   CUSTOMER: awesome
   REGION: eastus2
