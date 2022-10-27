@@ -89,7 +89,7 @@ jobs:
   prd:
     runs-on: ubuntu-latest
     environment: prd-env
-    needs: qa
+    needs: [qa,build]
     steps:
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
