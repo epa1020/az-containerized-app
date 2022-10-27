@@ -1,11 +1,11 @@
-name: CD-example-az-app
-run-name: CD example az app
+name: cd-example-az-app
+run-name: cd example az app
 on:
   push:
     branches:
       - "master"
-    paths:
-      - '!iac/**'
+    paths-ignore:
+      - 'iac/**'
   workflow_dispatch:
     inputs:
       reason:
@@ -20,6 +20,7 @@ on:
 env: 
   CUSTOMER: awesome
   ACR_NAME: awesomeprddemoacr
+  REGION: eastus2
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,6 +41,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
       - name: ACR creds
         id: acr-creds
         run: | 
@@ -73,6 +76,8 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
               az extension add --name containerapp
       - id: publish-image-name
         run: |
@@ -90,6 +95,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
       - run: |
               az extension add --name containerapp
       - id: publish-image-name

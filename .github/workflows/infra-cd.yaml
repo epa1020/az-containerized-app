@@ -6,6 +6,17 @@ on:
       - "master"
     paths:
       - 'iac/**'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: true
+        default: 'recreation'
+        type: choice
+        options:
+        - recreation
+        - refresh
+        - fix issues
 env:
   CUSTOMER: awesome
   REGION: eastus2
@@ -19,7 +30,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run: |
-          az config set defaults.location=${{ env.REGION }}  
+          az config set defaults.location=${{ env.REGION }}
       - run: |
           az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg
 

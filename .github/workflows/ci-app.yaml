@@ -3,9 +3,12 @@ run-name: CI example az app
 on:
   pull_request:
     branches: [master]
+    paths-ignore:
+      - 'iac/**'
 env: 
   CUSTOMER: awesome
   ACR_NAME: awesomedevdemoacr
+  REGION: eastus2
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,19 +29,17 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
       - name: ACR creds
         id: acr-creds
         run: | 
             user=$(az acr credential show -n ${{ env.ACR_NAME }} --query username -o tsv)
             pass=$(az acr credential show -n ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
-            echo $pass
+            echo "::add-mask::$pass"
             echo "::set-output name=pass::$pass"
-            echo $user
+            echo "::add-mask::$user"
             echo "::set-output name=user::$user"
-      - run: |
-          echo ${{ steps.acr-creds.outputs.user }}
-          echo ${{ steps.acr-creds.outputs.pass }}
-
 
       - name: 'Docker login'
         uses: azure/docker-login@v1
@@ -62,6 +63,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
       - run: |
               az extension add --name containerapp
       - id: publish-image-name
