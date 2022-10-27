@@ -1,9 +1,8 @@
 name: ci-infra-example-az
 run-name: CI Infra example az
 on:
-  push:
-    branches:
-      - "feature/**"
+  pull_request:
+    branches: [master]
     paths:
       - 'iac/**'
 env:

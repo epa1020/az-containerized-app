@@ -6,6 +6,6 @@ import org.junit.jupiter.api.Test;
 public class SimpleTest {
     @Test
     void verifyTest(){
-        assertEquals(2,2);
+        assertEquals(9,9);
     }
 }
