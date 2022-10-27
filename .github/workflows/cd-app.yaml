@@ -1,14 +1,13 @@
 name: ci-example-az-app
 run-name: CI example az app
 on:
-  pull_request:
+  push:
     branches: [master]
     paths:
       - '!iac/**'
 env: 
   CUSTOMER: awesome
-  BASE_APPNAME: awesome-dev-demo-app
-  ACR_NAME: ${{ env.CUSTOMER }}prddemoacr
+  ACR_NAME: awesomeprddemoacr
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,17 +28,26 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: ACR creds
+        id: acr-creds
+        run: | 
+            user=$(az acr credential show -n ${{ env.ACR_NAME }} --query username -o tsv)
+            pass=$(az acr credential show -n ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
+            echo "::add-mask::$pass"
+            echo "::set-output name=pass::$pass"
+            echo "::add-mask::$user"
+            echo "::set-output name=user::$user"
       
       - name: 'Push image'
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ env.ACR_NAME }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ steps.acr-creds.outputs.user }}
+          password: ${{ steps.acr-creds.outputs.pass }}
       - id: build-image
         run: |
-          docker build . -t ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
-          docker push ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
+          docker build . -t ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
       - id: publish-image-name
         run: |
               echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
@@ -59,9 +67,7 @@ jobs:
               echo  "--------Image--------"
               echo  ${{ needs.build.outputs.imagename }}
               echo  "-----------------"
-              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app \
-              -g ${{ env.CUSTOMER }}-dev-rg\
-              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
+              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app -g ${{ env.CUSTOMER }}-dev-rg --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
 
   prd:
     runs-on: ubuntu-latest
@@ -81,4 +87,4 @@ jobs:
               echo  "-----------------"
               az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app \
               -g ${{ env.CUSTOMER }}-prd-rg\
-              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
+              --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}

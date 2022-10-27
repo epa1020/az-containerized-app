@@ -3,7 +3,7 @@ run-name: CD Infra example az
 on:
   push:
     branches:
-      - "feature/**"
+      - "master"
     paths:
       - 'iac/**'
 env:
@@ -18,6 +18,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}  
       - run: |
           az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg
 
