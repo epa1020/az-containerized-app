@@ -29,8 +29,8 @@ jobs:
       - name: ACR creds
         id: acr-creds
         run: | 
-            user=$(az acr credential show -n MyRegistry --query username -o tsv)
-            pass=$(az acr credential show -n MyRegistry --query passwords[0].value -o tsv)
+            user=$(az acr credential show -n ${{ env.ACR_NAME }} --query username -o tsv)
+            pass=$(az acr credential show -n ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
             echo "::add-mask::$pass"
             echo "::set-output name=pass::$pass"
             echo "::add-mask::$user"
