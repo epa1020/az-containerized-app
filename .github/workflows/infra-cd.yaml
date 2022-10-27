@@ -56,7 +56,8 @@ jobs:
           az deployment group create --name ${{ env.CUSTOMER }}-qa-rg-deploy --resource-group ${{ env.CUSTOMER }}-qa-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=qa
       - name: Link ACR to APP
         run: |
-          acr_name=${{ env.CUSTOMER }}qademoacr
+          # Target PRD ACR
+          acr_name=${{ env.CUSTOMER }}prddemoacr
           app_name=${{ env.CUSTOMER }}-qa-demo-app
           rg=${{ env.CUSTOMER }}-qa-rg 
           acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
