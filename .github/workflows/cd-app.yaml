@@ -41,13 +41,13 @@ jobs:
       - name: 'Push image'
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ env.ACR_NAME }}
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
           username: ${{ steps.acr-creds.outputs.user }}
           password: ${{ steps.acr-creds.outputs.pass }}
       - id: build-image
         run: |
-          docker build . -t ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
-          docker push ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
+          docker build . -t ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
       - id: publish-image-name
         run: |
               echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
@@ -69,7 +69,7 @@ jobs:
               echo  "-----------------"
               az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app \
               -g ${{ env.CUSTOMER }}-dev-rg\
-              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
+              --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
 
   prd:
     runs-on: ubuntu-latest
@@ -89,4 +89,4 @@ jobs:
               echo  "-----------------"
               az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app \
               -g ${{ env.CUSTOMER }}-prd-rg\
-              --image ${{ env.ACR_NAME }}/${{needs.build.outputs.imagename}}
+              --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
