@@ -28,13 +28,22 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: ACR creds
+        id: acr-creds
+        run: | 
+            user=$(az acr credential show -n MyRegistry --query username -o tsv)
+            pass=$(az acr credential show -n MyRegistry --query passwords[0].value -o tsv)
+            echo "::add-mask::$pass"
+            echo "::set-output name=pass::$pass"
+            echo "::add-mask::$user"
+            echo "::set-output name=user::$user"
       
       - name: 'Push image'
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.ACR_NAME }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          username: ${{ steps.acr-creds.outputs.user }}
+          password: ${{ steps.acr-creds.outputs.pass }}
       - id: build-image
         run: |
           docker build . -t ${{ env.ACR_NAME }}/example-az-app:${{ github.sha }}
