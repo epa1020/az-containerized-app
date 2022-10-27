@@ -3,7 +3,7 @@ run-name: CD Infra example az
 on:
   push:
     branches:
-      - "feature/**"
+      - "master"
     paths:
       - 'iac/**'
 env:
