@@ -48,8 +48,8 @@ jobs:
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.ACR_NAME }}.azurecr.io
-          username: ${{ secret.REGISTRY_USERNAME}}
-          password: ${{ secret.REGISTRY_PASSWORD}}
+          username: ${{ secrets.REGISTRY_USERNAME}}
+          password: ${{ secrets.REGISTRY_PASSWORD}}
       - id: build-image
         run: |
           docker build . -t ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
