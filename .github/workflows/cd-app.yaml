@@ -67,9 +67,7 @@ jobs:
               echo  "--------Image--------"
               echo  ${{ needs.build.outputs.imagename }}
               echo  "-----------------"
-              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app \
-              -g ${{ env.CUSTOMER }}-dev-rg\
-              --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
+              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app -g ${{ env.CUSTOMER }}-dev-rg --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
 
   prd:
     runs-on: ubuntu-latest
