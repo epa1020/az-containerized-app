@@ -1,0 +1,75 @@
+name: ci-example-az-app
+run-name: CI example az app
+on:
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - 'iac/**'
+env: 
+  CUSTOMER: awesome
+  ACR_NAME: awesomedevdemoacr
+  REGION: eastus2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      imagename: ${{ steps.publish-image-name.outputs.image }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '11'
+          cache: 'maven'
+      - name: Build Unit Testing
+        run: mvn test
+      - name: Build with Maven
+        run: mvn clean package --file pom.xml
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - name: ACR creds
+        id: acr-creds
+        run: | 
+            user=$(az acr credential show -n ${{ env.ACR_NAME }} --query username -o tsv)
+            pass=$(az acr credential show -n ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
+            echo "::add-mask::$pass"
+            echo "::set-output name=pass::$pass"
+            echo "::add-mask::$user"
+            echo "::set-output name=user::$user"
+
+      - name: 'Docker login'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ steps.acr-creds.outputs.user }}
+          password: ${{ steps.acr-creds.outputs.pass }}
+      - id: build-image
+        run: |
+          docker build . -t ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+      - id: publish-image-name
+        run: |
+              echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
+  dev:
+    runs-on: ubuntu-latest
+    environment: dev-env
+    needs: build
+    steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
+              az extension add --name containerapp
+      - id: publish-image-name
+        run: |
+              echo  "-------IMAGE---------"
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.CUSTOMER }}-dev-demo-app -g ${{ env.CUSTOMER }}-dev-rg --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}

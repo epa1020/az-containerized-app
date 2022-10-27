@@ -10,5 +10,9 @@ public class HomeController {
 	public String index() {
 		return "index";
 	}
+	@RequestMapping(value = "/health")
+	public String health() {
+		return "health";
+	}
 
 }

@@ -1,0 +1,91 @@
+name: cd-infra-example-az
+run-name: CD Infra example az
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - 'iac/**'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: true
+        default: 'recreation'
+        type: choice
+        options:
+        - recreation
+        - refresh
+        - fix issues
+env:
+  CUSTOMER: awesome
+  REGION: eastus2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
+          az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg
+
+      - name: "Preview Infra"
+        run: |
+          az deployment group validate --name ${{ env.CUSTOMER }}-dev-rg --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
+  qa:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: infra-qa-env
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
+      - run: |
+          az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-qa-rg
+      - name: "Deploy Infra"
+        run: |
+          az deployment group create --name ${{ env.CUSTOMER }}-qa-rg-deploy --resource-group ${{ env.CUSTOMER }}-qa-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=qa
+      - name: Link ACR to APP
+        run: |
+          # Target PRD ACR
+          acr_name=${{ env.CUSTOMER }}prddemoacr
+          app_name=${{ env.CUSTOMER }}-qa-demo-app
+          rg=${{ env.CUSTOMER }}-qa-rg 
+          acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
+          acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
+          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"          
+
+  prd:
+    needs: qa
+    runs-on: ubuntu-latest
+    environment: infra-prd-env
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
+      - run: |
+          az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-prd-rg
+      - name: "Deploy Infra"
+        run: |
+          az deployment group create --name ${{ env.CUSTOMER }}-prd-rg-deploy --resource-group ${{ env.CUSTOMER }}-prd-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=prd
+      - name: Link ACR to APP
+        run: |
+          acr_name=${{ env.CUSTOMER }}prddemoacr
+          app_name=${{ env.CUSTOMER }}-prd-demo-app
+          rg=${{ env.CUSTOMER }}-prd-rg 
+          acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
+          acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
+          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"

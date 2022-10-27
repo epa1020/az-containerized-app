@@ -1,0 +1,107 @@
+name: cd-example-az-app
+run-name: cd example az app
+on:
+  push:
+    branches:
+      - "master"
+    paths-ignore:
+      - 'iac/**'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: true
+        default: 'recreation'
+        type: choice
+        options:
+        - recreation
+        - refresh
+        - fix issues
+env: 
+  CUSTOMER: awesome
+  ACR_NAME: awesomeprddemoacr
+  REGION: eastus2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      imagename: ${{ steps.publish-image-name.outputs.image }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '11'
+          cache: 'maven'
+      - name: Build Unit Testing
+        run: mvn test
+      - name: Build with Maven
+        run: mvn clean package --file pom.xml
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - name: ACR creds
+        id: acr-creds
+        run: | 
+            user=$(az acr credential show -n ${{ env.ACR_NAME }} --query username -o tsv)
+            pass=$(az acr credential show -n ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
+            echo "::add-mask::$pass"
+            echo "::set-output name=pass::$pass"
+            echo "::add-mask::$user"
+            echo "::set-output name=user::$user"
+      
+      - name: 'Push image'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ steps.acr-creds.outputs.user }}
+          password: ${{ steps.acr-creds.outputs.pass }}
+      - id: build-image
+        run: |
+          docker build . -t ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/example-az-app:${{ github.sha }}
+      - id: publish-image-name
+        run: |
+              echo "image=example-az-app:${{ github.sha }}" >> $GITHUB_OUTPUT
+  qa:
+    runs-on: ubuntu-latest
+    environment: qa-env
+    needs: build
+    steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
+              az extension add --name containerapp
+      - id: publish-image-name
+        run: |
+              echo  "--------Image--------"
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.CUSTOMER }}-qa-demo-app -g ${{ env.CUSTOMER }}-qa-rg --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}
+
+  prd:
+    runs-on: ubuntu-latest
+    environment: prd-env
+    needs: qa
+    steps:
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
+              az extension add --name containerapp
+      - id: publish-image-name
+        run: |
+              echo  "-------Image---------"
+              echo  ${{ needs.build.outputs.imagename }}
+              echo  "-----------------"
+              az containerapp update -n ${{ env.CUSTOMER }}-prd-demo-app -g ${{ env.CUSTOMER }}-prd-rg --image ${{ env.ACR_NAME }}.azurecr.io/${{needs.build.outputs.imagename}}

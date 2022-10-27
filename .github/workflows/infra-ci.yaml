@@ -1,0 +1,54 @@
+name: ci-infra-example-az
+run-name: CI Infra example az
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'iac/**'
+env:
+  CUSTOMER: awesome
+  REGION: eastus2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+          az config set defaults.location=${{ env.REGION }}
+      - run: |
+          az group create -l ${{ env.REGION }} -n ${{ env.CUSTOMER }}-dev-rg
+      - run: |
+          ls
+          pwd
+          ls ./iac
+          cat ./iac/infra.json
+      - name: "Preview Infra"
+        run: |
+          az deployment group validate --name ${{ env.CUSTOMER }}-dev-rg --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
+  dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: infra-prd-env
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - run: |
+              az extension add --name containerapp
+      - name: "Deploy Infra"
+        run: |
+          az deployment group create --name ${{ env.CUSTOMER }}-dev-rg-deploy --resource-group ${{ env.CUSTOMER }}-dev-rg --template-file ./iac/infra.json --parameters customer=${{ env.CUSTOMER }} --parameters environment=dev
+      - name: Link ACR to APP
+        run: |
+          acr_name=${{ env.CUSTOMER }}devdemoacr
+          app_name=${{ env.CUSTOMER }}-dev-demo-app
+          rg=${{ env.CUSTOMER }}-dev-rg 
+          acr_pass=$(az acr credential show -n $acr_name --query passwords[0].value -o tsv)
+          acr_usr=$(az acr credential show -n $acr_name --query username -o tsv)
+          az containerapp registry set -n $app_name -g $rg --server "$acr_name.azurecr.io" --username "$acr_usr" --password "$acr_pass"
