@@ -43,7 +43,7 @@ jobs:
       - name: 'Docker login'
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ env.ACR_NAME }}
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
           username: ${{ steps.acr-creds.outputs.user }}
           password: ${{ steps.acr-creds.outputs.pass }}
       - id: build-image
