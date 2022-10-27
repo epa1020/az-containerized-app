@@ -1,5 +1,5 @@
-name: ci-example-az-app
-run-name: CI example az app
+name: CD-example-az-app
+run-name: CD example az app
 on:
   push:
     branches:
