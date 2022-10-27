@@ -6,6 +6,17 @@ on:
       - "master"
     paths:
       - '!iac/**'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: true
+        default: 'recreation'
+        type: choice
+        options:
+        - recreation
+        - refresh
+        - fix issues
 env: 
   CUSTOMER: awesome
   ACR_NAME: awesomeprddemoacr
